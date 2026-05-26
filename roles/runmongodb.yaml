@@ -1,0 +1,5 @@
+- name: Execute MongoDB Role
+  hosts: mongodb
+  become: true
+  roles:
+    - mongodb
