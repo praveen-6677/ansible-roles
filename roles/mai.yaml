@@ -1,0 +1,6 @@
+---
+- name: Deploy MongoDB
+  hosts: mongodb
+  become: true
+  roles:
+    - mongodb
