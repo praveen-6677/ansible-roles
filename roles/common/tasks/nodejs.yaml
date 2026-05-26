@@ -1,0 +1,4 @@
+- name: install npm dependencies
+  ansible.builtin.command:
+    cmd: npm install
+    chdir: /app

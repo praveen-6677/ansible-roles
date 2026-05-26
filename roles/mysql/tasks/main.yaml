@@ -1,0 +1,32 @@
+- name: copying mysql repo file
+  ansible.builtin.copy:
+    src: mysql.repo
+    dest: /etc/yum.repos.d/mysql.repo
+
+- name: installing mysql server
+  ansible.builtin.yum:
+    name: mysql-community-server
+    state: present
+
+- name: starting and enabling mysql service
+  ansible.builtin.systemd:
+    name: mysqld
+    enabled: yes
+    state: started
+
+- name: Check if MySQL root password is already set
+  ansible.builtin.command: >
+    mysql -uroot -p{{ mysql_root_password }} -e "SELECT 1;"
+  register: mysql_root_check
+  ignore_errors: yes
+
+- name: Get temporary MySQL root password
+  ansible.builtin.shell: grep 'temporary password' /var/log/mysqld.log | tail -1 | awk '{print $NF}'
+  register: mysql_temp_password
+  when: mysql_root_check.rc != 0
+
+- name: Reset MySQL root password using temporary password
+  ansible.builtin.command: >
+    mysql -uroot -p{{ mysql_temp_password.stdout }} --connect-expired-password
+    -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+  when: mysql_root_check.rc != 0
